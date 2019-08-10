@@ -1,0 +1,58 @@
+#!/bin/sh
+###############################################################################
+# Copyright (c) 2014 Red Hat, Inc. and others
+# All rights reserved. This program and the accompanying materials
+# are made available under the terms of the Eclipse Public License v1.0
+# which accompanies this distribution, and is available at
+# http://www.eclipse.org/legal/epl-v10.html
+#
+# Contributors:
+#    Red Hat Inc. - initial API and implementation
+###############################################################################
+
+# Verify that the install script is being run from a plug-ins folder of a
+# downloaded Eclipse and not in a local user .eclipse folder.
+
+SCRIPT_DIR=`dirname $0`
+
+if [ -d "$HOME/mdebugger" ]; then
+  exit 0
+fi
+
+IS_MAC=0
+
+if [ ! -f "$SCRIPT_DIR/../eclipse/eclipse" ]; then
+#  if [ ! -f "$SCRIPT_DIR/../../MacOS/eclipse" ]; then
+    echo "$0: error: eclipse executable not found in expected location"
+    echo " "
+    echo "This can occur if you are running this script from your local .eclipse directory"
+    echo "which would mean you are running a shared instance of the Eclipse platform for"
+    echo "your distro and have installed the Stand-alone Debugger from an eclipse.org"
+    echo "download repo.  Downloading the Stand-alone Debugger feature on top of a distro"
+    echo "version of Eclipse Debugger is not supported.  If you are using a distro version"
+    echo "of the Eclipse platform, you should not use this script.  Instead, install the"
+    echo "corresponding Eclipse CDT package for your distro (e.g. eclipse-cdt package)"
+    echo "which will install the Stand-alone Debugger for you."
+    exit 1
+#  else
+#    IS_MAC=1
+#  fi
+fi
+
+
+mkdir -p "$HOME/mdebugger"
+
+cp "$SCRIPT_DIR/config.ini" "$HOME/mdebugger"
+cp "$SCRIPT_DIR/dev.properties" "$HOME/mdebugger"
+cp "$SCRIPT_DIR/mdebug.sh" "$HOME/mdebugger"
+chmod +x "$HOME/mdebugger/mdebug.sh"
+
+if [ $IS_MAC -eq 0 ]; then
+  ECLIPSE_HOME=$(cd "$SCRIPT_DIR/../eclipse" && pwd)
+else
+  ECLIPSE_HOME=$(cd "$SCRIPT_DIR/../../../../MacOS" && pwd)
+fi
+
+# Replace the entire line with tag @#@# by the actual location of the eclipse installation
+sed -i -e "s,^.*@#@#.*$,ECLIPSE_HOME=$ECLIPSE_HOME," "$HOME/mdebugger/mdebug.sh"
+echo "Installation complete"
